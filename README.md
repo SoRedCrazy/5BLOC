@@ -9,6 +9,12 @@ QUICKNODE_URL=""
 PRIVATE_KEY="" 
 ```
 
+Installer les dépance:
+
+```
+npm install
+```
+
 Commande pour deployer sont script
 
-`npx hardhat run scripts/deploy.js --network sepolia`
+ `npx hardhat run scripts/deploy.js --network sepolia`
