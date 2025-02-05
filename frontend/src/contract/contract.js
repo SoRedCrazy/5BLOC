@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-const contractAddress = '0x0165878A594ca255338adfa4d48449f69242Eb8F';
+const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 const contractABI = [
   // Le mapping public proposals génère automatiquement cette fonction
   "function mint(uint8 propertyType, string memory name, string memory location, string memory value, string memory surface, string memory documentHash, string memory imageHash) external",
@@ -95,6 +95,30 @@ export const getAvailableProperties = async () => {
   }
 };
 
+export const getMyProperties = async () => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+
+    const properties = await contract.getMyProperties();
+    return properties.map(property => ({
+      propertyType: property.propertyType,
+      name: property.name,
+      location: property.location,
+      value: property.value,
+      surface: property.surface,
+      createdAt: property.createdAt,
+      lastTransferAt: property.lastTransferAt,
+      previousOwners: property.previousOwners,
+      documentHash: property.documentHash,
+      imageHash: property.imageHash
+    }));
+  } catch (error) {
+    console.error("Erreur lors de la récupération des propriétés:", error);
+    return [];
+  }
+};
+
 export const mint = async (propertyType, name, location, value, surface, documentHash, imageHash) => {
   try {
     const contract = await getContract();
@@ -106,6 +130,36 @@ export const mint = async (propertyType, name, location, value, surface, documen
     return true;
   } catch (error) {
     console.error("Erreur lors du mint:", error);
+    throw error;
+  }
+};
+
+export const addAdmin = async (account) => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+
+    const tx = await contract.addAdmin(account);
+    await tx.wait(); // Attendre la confirmation
+
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'administrateur:", error);
+    throw error;
+  }
+};
+
+export const removeAdmin = async (account) => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+
+    const tx = await contract.removeAdmin(account);
+    await tx.wait(); // Attendre la confirmation
+
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'administrateur:", error);
     throw error;
   }
 };
@@ -133,5 +187,39 @@ export const isAdmin = async (account) => {
   } catch (error) {
     console.error("Erreur lors de la vérification de l'administrateur:", error);
     return false;
+  }
+};
+
+export const getTransactionHistory = async () => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+
+    const transactions = await contract.getTransactionHistory();
+    return transactions.map(transaction => ({
+      tokenId: transaction.tokenId,
+      from: transaction.from,
+      to: transaction.to,
+      timestamp: transaction.timestamp
+    }));
+  } catch (error) {
+    console.error("Erreur lors de la récupération des transactions:", error);
+    return [];
+  }
+};
+
+export const purchaseProperty = async (tokenId, value) => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+    console.log('tokenId:', tokenId);
+    console.log('value:', value); 
+    const tx = await contract.purchaseProperty(tokenId, { value: ethers.utils.parseEther(value) });
+    await tx.wait(); // Attendre la confirmation
+
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de l'achat de la propriété:", error);
+    throw error;
   }
 };

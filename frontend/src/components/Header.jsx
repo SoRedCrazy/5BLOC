@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { mint } from '../contract/contract';
 
-const Header = ({ account, isAdmin }) => {
+const Header = ({ account, isAdmin, setView }) => {
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [propertyDetails, setPropertyDetails] = useState({
     propertyType: '',
@@ -41,67 +41,11 @@ const Header = ({ account, isAdmin }) => {
     <header className="header">
       <div className="nav">
         <span>Connected: {account ? account.slice(0, 6) : 'N/A'}...</span>
-        {isAdmin && (
-          <button onClick={() => setShowAdminForm(!showAdminForm)}>
-            {showAdminForm ? 'Hide Admin Form' : 'Show Admin Form'}
-          </button>
-        )}
-      </div>
-      {showAdminForm && (
-        <div className="admin-form">
-          <h2>Add New Property</h2>
-          <input
-            type="text"
-            name="propertyType"
-            placeholder="Property Type (0: MAISON, 1: GARE, 2: HOTEL)"
-            value={propertyDetails.propertyType}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={propertyDetails.name}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={propertyDetails.location}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="value"
-            placeholder="Value"
-            value={propertyDetails.value}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="surface"
-            placeholder="Surface"
-            value={propertyDetails.surface}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="documentHash"
-            placeholder="Document Hash"
-            value={propertyDetails.documentHash}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="imageHash"
-            placeholder="Image Hash"
-            value={propertyDetails.imageHash}
-            onChange={handleInputChange}
-          />
-          <button onClick={handleMint}>Mint Property</button>
+        <button onClick={() => setView('properties')}>Propriétés disponibles</button>
+        <button onClick={() => setView('account')}>Mon compte</button>
+        {isAdmin && <button onClick={() => setView('admin')}>Admin Panel</button>}
+        <button onClick={() => setView('transactions')}>Transactions</button>
         </div>
-      )}
     </header>
   );
 };

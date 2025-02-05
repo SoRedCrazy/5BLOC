@@ -37,6 +37,7 @@ th, td {
 
 th {
   background-color: #f4f4f4;
+  color: #000;
 }
 
 .header {
@@ -46,14 +47,20 @@ th {
   padding: 1rem;
   background-color: #f4f4f4;
   margin-bottom: 2rem;
+  color: black;
 }
 
-.admin-form {
+.admin-panel {
   margin-top: 2rem;
   background-color: #f9f9f9;
   padding: 1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  color: black;
+}
+
+.admin-form {
+  margin-top: 1rem;
 }
 
 .admin-form input {

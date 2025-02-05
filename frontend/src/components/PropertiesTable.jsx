@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getAvailableProperties } from '../contract/contract';
+import { getAvailableProperties, purchaseProperty } from '../contract/contract';
+import { ethers } from 'ethers';
 
 const PropertiesTable = () => {
   const [properties, setProperties] = useState([]);
@@ -15,7 +16,6 @@ const PropertiesTable = () => {
       } finally {
         setLoading(false);
       }
-      console.log("Properties:", properties);
     };
 
     fetchProperties();
@@ -31,6 +31,19 @@ const PropertiesTable = () => {
         return "Hotel";
       default:
         return "Unknown";
+    }
+  };
+
+  const handlePurchase = async (tokenId, value) => {
+    try {
+      await purchaseProperty(tokenId, value)
+      alert('Property purchased successfully');
+      // Refresh properties list
+      const availableProperties = await getAvailableProperties();
+      setProperties(availableProperties);
+    } catch (error) {
+      console.error('Error purchasing property:', error);
+      alert('Error purchasing property');
     }
   };
 
@@ -51,6 +64,7 @@ const PropertiesTable = () => {
           <th>Dernier transfert</th>
           <th>Document Hash</th>
           <th>Image Hash</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -65,6 +79,11 @@ const PropertiesTable = () => {
             <td>{new Date(property.lastTransferAt * 1000).toLocaleString()}</td>
             <td>{property.documentHash}</td>
             <td>{property.imageHash}</td>
+            <td>
+              <button onClick={() => handlePurchase(index, property.value)}>
+                Acheter
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
