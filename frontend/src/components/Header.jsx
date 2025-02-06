@@ -12,10 +12,16 @@ const Header = ({ account, isAdmin, setView }) => {
     documentHash: '',
     imageHash: ''
   });
+  const [notification, setNotification] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setPropertyDetails({ ...propertyDetails, [name]: value });
+  };
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 10000);
   };
 
   const handleMint = async () => {
@@ -30,15 +36,16 @@ const Header = ({ account, isAdmin, setView }) => {
         propertyDetails.documentHash,
         propertyDetails.imageHash
       );
-      alert('Property minted successfully');
+      showNotification('Property minted successfully');
     } catch (error) {
       console.error('Error minting property:', error);
-      alert('Error minting property');
+      showNotification('Error minting property');
     }
   };
 
   return (
     <header className="header">
+      {notification && <div className="notification">{notification}</div>}
       <div className="nav">
         <span>Connected: {account ? account.slice(0, 6) : 'N/A'}...</span>
         <button onClick={() => setView('properties')}>Propriétés disponibles</button>

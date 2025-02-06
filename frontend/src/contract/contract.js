@@ -1,22 +1,21 @@
 import { ethers } from 'ethers';
+import contractAddress from './contract-address.json';
 
-const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 const contractABI = [
-  // Le mapping public proposals génère automatiquement cette fonction
-  "function mint(uint8 propertyType, string memory name, string memory location, string memory value, string memory surface, string memory documentHash, string memory imageHash) external",
+  "function mint(uint8 propertyType, string name, string location, uint256 value, string documentHash) external",
   "function addAdmin(address account) public",
   "function removeAdmin(address account) public",
-  "function getPropertyInfo(uint256 tokenId) external view returns (tuple(uint8 propertyType, string name, string location, string value, string surface, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, string imageHash))",
-  "function getAvailableProperties() external view returns (tuple(uint8 propertyType, string name, string location, string value, string surface, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, string imageHash)[])",
-  "function getMyProperties() external view returns (tuple(uint8 propertyType, string name, string location, string value, string surface, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, string imageHash)[])",
+  "function getPropertyInfo(uint256 tokenId) external view returns (tuple(uint8 propertyType, string name, string location, uint256 value, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, bool hasSale))",
+  "function getAvailableProperties() external view returns (tuple(uint256 tokenId, tuple(uint8 propertyType, string name, string location, uint256 value, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, bool hasSale))[])",
+  "function getMyProperties() external view returns (tuple(uint256 tokenId, tuple(uint8 propertyType, string name, string location, uint256 value, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, bool hasSale))[])",
   "function purchaseProperty(uint256 tokenId) external payable",
   "function exchangeHousesForProperty(uint256[] calldata houseTokenIds, uint8 targetType) external",
   "function getTransactionHistory() external view returns (tuple(uint256 tokenId, address from, address to, uint256 timestamp)[])",
-  "function searchPropertiesByType(uint8 propertyType) external view returns (tuple(uint8 propertyType, string name, string location, string value, string surface, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, string imageHash)[])",
-  "function filterPropertiesByValue(uint256 minValue, uint256 maxValue) external view returns (tuple(uint8 propertyType, string name, string location, string value, string surface, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, string imageHash)[])",
-  "function getPropertiesCountAtAddress(address owner) public view returns (uint256)",
+  "function searchPropertiesByType(uint8 propertyType) external view returns (tuple(uint256 tokenId, tuple(uint8 propertyType, string name, string location, uint256 value, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, bool hasSale))[])",
+  "function filterPropertiesByValue(uint256 minValue, uint256 maxValue) external view returns (tuple(uint256 tokenId, tuple(uint8 propertyType, string name, string location, uint256 value, uint256 createdAt, uint256 lastTransferAt, address[] previousOwners, string documentHash, bool hasSale))[])",
   "function getAllAdmins() external view returns (address[])",
-  "function isAdmin(address account) external view returns (bool)"
+  "function isAdmin(address account) external view returns (bool)",
+  "function setPropertyOnSale(uint256 tokenId) external"
 ];
 
 let provider = null;
@@ -27,8 +26,6 @@ export const connectWallet = async () => {
     if (typeof window.ethereum === 'undefined') {
       throw new Error("MetaMask n'est pas installé");
     }
-
-    // Vérifier si déjà connecté
     const accounts = await window.ethereum.request({ 
       method: 'eth_accounts' 
     });
@@ -39,7 +36,6 @@ export const connectWallet = async () => {
       return signer;
     }
 
-    // Si pas connecté, demander la connexion
     try {
       await window.ethereum.request({ 
         method: 'eth_requestAccounts',
@@ -68,64 +64,52 @@ export const getContract = async () => {
   if (!signer) {
     signer = await connectWallet();
   }
-  return signer ? new ethers.Contract(contractAddress, contractABI, signer) : null;
+  return signer ? new ethers.Contract(contractAddress.MonopolyNFT, contractABI, signer) : null;
 };
 
-export const getAvailableProperties = async () => {
+const mapProperty = (property) => ({
+  tokenId: property.tokenId,
+  propertyType: property[1].propertyType,
+  name: property[1].name,
+  location: property[1].location,
+  value: property[1].value,
+  createdAt: property[1].createdAt,
+  lastTransferAt: property[1].lastTransferAt,
+  previousOwners: property[1].previousOwners,
+  documentHash: property[1].documentHash,
+  hasSale: property[1].hasSale
+});
+
+const fetchProperties = async (fetchFunction, ...args) => {
   try {
     const contract = await getContract();
     if (!contract) throw new Error("Contrat non disponible");
 
-    const properties = await contract.getAvailableProperties();
-    return properties.map(property => ({
-      propertyType: property.propertyType,
-      name: property.name,
-      location: property.location,
-      value: property.value,
-      surface: property.surface,
-      createdAt: property.createdAt,
-      lastTransferAt: property.lastTransferAt,
-      previousOwners: property.previousOwners,
-      documentHash: property.documentHash,
-      imageHash: property.imageHash
-    }));
+    const properties = await contract[fetchFunction](...args);
+    return properties.map(mapProperty);
   } catch (error) {
-    console.error("Erreur lors de la récupération des propriétés disponibles:", error);
+    console.error(`Erreur lors de la récupération des propriétés avec ${fetchFunction}:`, error);
     return [];
   }
 };
 
-export const getMyProperties = async () => {
+export const getAvailableProperties = async () => fetchProperties('getAvailableProperties');
+
+export const getMyProperties = async () => fetchProperties('getMyProperties');
+
+export const searchPropertiesByType = async (propertyType) => fetchProperties('searchPropertiesByType', propertyType);
+
+export const filterPropertiesByValue = async (minValue, maxValue) => fetchProperties('filterPropertiesByValue', minValue, maxValue);
+
+const toWei = (ether) => ethers.utils.parseUnits(ether.toString(), 'wei');
+
+export const mint = async (propertyType, name, location, value, documentHash) => {
   try {
     const contract = await getContract();
     if (!contract) throw new Error("Contrat non disponible");
 
-    const properties = await contract.getMyProperties();
-    return properties.map(property => ({
-      propertyType: property.propertyType,
-      name: property.name,
-      location: property.location,
-      value: property.value,
-      surface: property.surface,
-      createdAt: property.createdAt,
-      lastTransferAt: property.lastTransferAt,
-      previousOwners: property.previousOwners,
-      documentHash: property.documentHash,
-      imageHash: property.imageHash
-    }));
-  } catch (error) {
-    console.error("Erreur lors de la récupération des propriétés:", error);
-    return [];
-  }
-};
-
-export const mint = async (propertyType, name, location, value, surface, documentHash, imageHash) => {
-  try {
-    const contract = await getContract();
-    if (!contract) throw new Error("Contrat non disponible");
-
-    const tx = await contract.mint(propertyType, name, location, value, surface, documentHash, imageHash);
-    await tx.wait(); // Attendre la confirmation
+    const tx = await contract.mint(propertyType, name, location, value, documentHash);
+    await tx.wait();
 
     return true;
   } catch (error) {
@@ -140,7 +124,7 @@ export const addAdmin = async (account) => {
     if (!contract) throw new Error("Contrat non disponible");
 
     const tx = await contract.addAdmin(account);
-    await tx.wait(); // Attendre la confirmation
+    await tx.wait();
 
     return true;
   } catch (error) {
@@ -197,10 +181,10 @@ export const getTransactionHistory = async () => {
 
     const transactions = await contract.getTransactionHistory();
     return transactions.map(transaction => ({
-      tokenId: transaction.tokenId,
+      tokenId: transaction.tokenId.toString(),
       from: transaction.from,
       to: transaction.to,
-      timestamp: transaction.timestamp
+      timestamp: transaction.timestamp.toNumber()
     }));
   } catch (error) {
     console.error("Erreur lors de la récupération des transactions:", error);
@@ -208,18 +192,33 @@ export const getTransactionHistory = async () => {
   }
 };
 
-export const purchaseProperty = async (tokenId, value) => {
+export const purchaseProperty = async (tokenId, etherValue) => {
   try {
     const contract = await getContract();
     if (!contract) throw new Error("Contrat non disponible");
-    console.log('tokenId:', tokenId);
-    console.log('value:', value); 
-    const tx = await contract.purchaseProperty(tokenId, { value: ethers.utils.parseEther(value) });
-    await tx.wait(); // Attendre la confirmation
 
+    const weiValue = toWei(etherValue);
+    const tx = await contract.purchaseProperty(tokenId, { value: weiValue });
+    await tx.wait();
     return true;
   } catch (error) {
     console.error("Erreur lors de l'achat de la propriété:", error);
     throw error;
   }
 };
+
+export const setSaleStatus = async (tokenId) => {
+  try {
+    const contract = await getContract();
+    if (!contract) throw new Error("Contrat non disponible");
+    const tx = await contract.setPropertyOnSale(tokenId );
+    await tx.wait();
+    console.log(tx);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors du changement de l'état de vente:", error);
+    throw error;
+  }
+};
+
+

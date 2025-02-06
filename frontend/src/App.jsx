@@ -13,6 +13,12 @@ function App() {
   const [isAdminStatus, setIsAdminStatus] = useState(false);
   const [signer, setSigner] = useState(null);
   const [view, setView] = useState('properties');
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 10000);
+  };
 
   const handleConnect = async (signer) => {
     try {
@@ -20,8 +26,10 @@ function App() {
       console.log("Connecté avec l'adresse:", address);
       setAccount(address);
       setIsAdminStatus(await isAdmin(address));
+      showNotification("Connecté avec l'adresse: " + address);
     } catch (error) {
       console.error("Erreur de connexion:", error);
+      showNotification("Erreur de connexion: " + error.message);
     }
   };
 
@@ -45,6 +53,7 @@ function App() {
 
   return (
     <div className="App">
+      {notification && <div className="notification">{notification}</div>}
       {!signer ? (
         <Login onLogin={handleLogin} />
       ) : (

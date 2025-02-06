@@ -1,0 +1,150 @@
+Projet Web3 – Monopoly
+Contexte
+
+Le maire de Lyonne souhaite décentraliser la gestion des biens immobiliers de sa ville via leur tokenisation. L’objectif est d’offrir aux citoyens une plateforme permettant d’acquérir et d’échanger ces biens immobiliers tout en évitant une centralisation excessive.
+Objectifs
+
+Développer une DApp qui permettra :
+
+    Tokenisation des biens immobiliers : Conversion des propriétés en actifs numériques.
+    Consultation et achat de biens : Interface pour visualiser et acquérir des biens.
+    Échange de biens : Facilitation des transactions entre citoyens.
+    Gestion des documents de propriété : Stockage sécurisé sur IPFS.
+    Respect des règles de gouvernance : Implémentation des règles métier.
+
+Règles Métier
+
+    Limites de possession :
+        Maximum de 4 actifs par adresse.
+        Types de biens : maisons, gares, hôtels.
+    Règles d’échange :
+        3 maisons = 1 gare
+        4 maisons = 1 hôtel
+        Échange uniquement entre biens de même valeur.
+    Contraintes temporelles :
+        Cooldown de 5 minutes entre deux transactions d’un utilisateur.
+        Lock de 10 minutes après un achat initial (pour tester facilement).
+
+Format des Biens (Metadata)
+
+{
+    "name": "Nom du bien",
+    "type": "maison|gare|hotel",
+    "location": "Quartier/Adresse",
+    "value": "Valeur en ETH/SOL",
+    "surface": "Surface en m²",
+    "documentHash": "Hash IPFS du document de propriété",
+    "imageHash": "Hash IPFS de l'image du bien",
+    "previousOwners": ["liste des adresses des propriétaires précédents"],
+    "createdAt": "timestamp de création",
+    "lastTransferAt": "timestamp du dernier transfert"
+}
+    
+
+Spécifications Techniques
+
+    Blockchain (au choix) :
+        Option 1 : Déploiement sur Testnet
+            Ethereum (Sepolia Testnet)
+                Smart Contract : Solidity
+                Standard : ERC-721
+            Solana (Devnet)
+                Program : Rust
+                Standard : Metaplex
+        Option 2 : Tests Unitaires Complets
+            Environnement local (Hardhat/Anchor)
+            Tests couvrant 100 % des fonctionnalités du smart contract
+            Mock du wallet et de la blockchain pour le frontend
+            Documentation détaillée des tests
+    Stockage :
+        Documents de propriété : IPFS (obligatoire)
+        Hash du document stocké dans le smart contract
+    Propriété des Biens :
+        Owner actuel : Géré nativement par le standard NFT
+            Ethereum : fonction ownerOf(tokenId)
+            Solana : vérification du propriétaire via le Program
+        Historique des propriétaires : Stocké dans les metadata
+    Frontend :
+        Framework recommandé : React
+        Autres technologies acceptées si justifiées
+        Interface minimum requise :
+            Connexion wallet (si option testnet)
+            Liste des biens disponibles
+            Mes biens
+            Interface d’achat/vente
+            Interface d’échange
+            Upload et consultation des documents
+
+Fonctionnalités Attendues
+MVP (Minimum Viable Product)
+
+    Connexion wallet (si option testnet)
+    Consultation des biens disponibles
+    Achat d’un bien
+    Upload document sur IPFS
+    Visualisation de mes biens
+    Échange de biens
+    Respect des règles de possession
+    Respect des cooldowns
+
+Bonus
+
+    Interface admin pour le maire
+    Système de notifications
+    Historique des transactions
+    Recherche et filtres
+    Tests automatisés (si option testnet)
+
+Livrables
+
+    Code source
+    README détaillé contenant :
+        Instructions d’installation
+        Guide de déploiement
+        Documentation des endpoints
+        Explications des choix techniques
+        Documentation des tests
+    Smart Contract déployé (si option testnet) ou suite de tests complète (si option locale)
+    Interface utilisateur déployée
+    Vidéo démo de 5 minutes maximum
+
+Critères d’Évaluation
+
+    Qualité du code (30 %) :
+        Propreté et lisibilité
+        Utilisation des best practices
+        Gestion des erreurs
+        Pour l’option locale :
+            Couverture de tests complète
+            Qualité des tests unitaires
+            Documentation des scénarios de test
+        Pour l’option testnet :
+            Tests de base
+            Qualité du déploiement
+            Gestion des interactions blockchain
+    Fonctionnalités (40 %) :
+        Respect des règles métier
+        Implémentation complète du MVP
+        Gestion correcte des documents IPFS
+        Respect des contraintes temporelles
+    UX/UI (bonus de 20 %) :
+        Interface intuitive
+        Responsive design
+        Feedback utilisateur
+        Gestion des états de chargement
+    Documentation (30 %) :
+        Qualité du README
+        Clarté des instructions
+        Documentation du code
+        Qualité de la démo
+
+Notes Importantes
+
+    Le choix entre déploiement testnet et tests unitaires complets doit être clairement documenté dans le README.
+    Les tests unitaires doivent couvrir :
+        Toutes les règles métier
+        Les contraintes temporelles
+        Les limites de possession
+        Les échanges de biens
+        Les cas d’erreur
+    La simulation locale de la blockchain doit être documentée pour permettre aux correcteurs de lancer le projet facilement.

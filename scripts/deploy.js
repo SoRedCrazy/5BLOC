@@ -1,17 +1,25 @@
-// scripts/deploy.js
 const hre = require("hardhat");
+const fs = require('fs');
+const path = require('path');
 
 async function main() {
-  // 1. On récupère la factory (l'usine) du contrat
   const MonopolyNFT = await hre.ethers.getContractFactory("MonopolyNFT");
+  const monopolyNFT = await MonopolyNFT.deploy();
+  console.log("MonopolyNFT déployé à l'adresse :", await monopolyNFT.getAddress());
 
-  // 2. On déploie le contrat
-  const monopolyNFT = await MonopolyNFT.deploy(); // Si votre constructeur prend des params, ajoutez-les ici.
+  // Save contract address to a JSON file
+  const contractsDir = path.join(__dirname, '..', 'frontend', 'src', 'contract');
+  if (!fs.existsSync(contractsDir)) {
+    fs.mkdirSync(contractsDir, { recursive: true });
+  }
 
-  // 3. On attend la confirmation
-  await monopolyNFT.deployed();
-
-  console.log("MonopolyNFT déployé à l'adresse :", monopolyNFT.address);
+  fs.writeFileSync(
+    path.join(contractsDir, 'contract-address.json'),
+    JSON.stringify({ MonopolyNFT: await monopolyNFT.getAddress() }, undefined, 2)
+  );
+  console.log(
+    "Adresse du contrat MonopolyNFT sauvegardée dans le fichier frontend/contract-address.json"
+  );
 }
 
 main().catch((error) => {

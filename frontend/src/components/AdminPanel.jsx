@@ -7,13 +7,12 @@ const AdminPanel = () => {
     name: '',
     location: '',
     value: '',
-    surface: '',
-    documentHash: '',
-    imageHash: ''
+    documentHash: ''
   });
   const [admins, setAdmins] = useState([]);
   const [newAdmin, setNewAdmin] = useState('');
   const [adminToRemove, setAdminToRemove] = useState('');
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const fetchAdmins = async () => {
@@ -33,22 +32,24 @@ const AdminPanel = () => {
     setPropertyDetails({ ...propertyDetails, [name]: value });
   };
 
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 10000);
+  };
+
   const handleMint = async () => {
     try {
-      const propertyTypeInt = parseInt(propertyDetails.propertyType, 10);
       await mint(
-        propertyTypeInt,
+        propertyDetails.propertyType,
         propertyDetails.name,
         propertyDetails.location,
-        propertyDetails.value,
-        propertyDetails.surface,
+        (parseFloat(propertyDetails.value) * 100000000000000).toString(),
         propertyDetails.documentHash,
-        propertyDetails.imageHash
       );
-      alert('Property minted successfully');
+      showNotification('Property minted successfully');
     } catch (error) {
       console.error('Error minting property:', error);
-      alert('Error minting property');
+      showNotification('Error minting property');
     }
   };
 
@@ -57,37 +58,40 @@ const AdminPanel = () => {
       await addAdmin(newAdmin);
       setAdmins([...admins, newAdmin]);
       setNewAdmin('');
-      alert('Admin added successfully');
+      showNotification('Admin added successfully');
     } catch (error) {
       console.error('Error adding admin:', error);
-      alert('Error adding admin');
+      showNotification('Error adding admin');
     }
   };
 
-  const handleRemoveAdmin = async () => {
+  const handleRemoveAdminDirect = async (address) => {
     try {
-      await removeAdmin(adminToRemove);
-      setAdmins(admins.filter(admin => admin !== adminToRemove));
-      setAdminToRemove('');
-      alert('Admin removed successfully');
+      await removeAdmin(address);
+      setAdmins(admins.filter(admin => admin !== address));
+      showNotification('Admin removed successfully');
     } catch (error) {
       console.error('Error removing admin:', error);
-      alert('Error removing admin');
+      showNotification('Error removing admin');
     }
   };
 
   return (
     <div className="admin-panel">
+      {notification && <div className="notification">{notification}</div>}
       <h2>Admin Panel</h2>
       <div className="admin-form">
         <h3>Add New Property</h3>
-        <input
-          type="text"
+        <select
           name="propertyType"
-          placeholder="Property Type (0: MAISON, 1: GARE, 2: HOTEL)"
           value={propertyDetails.propertyType}
           onChange={handleInputChange}
-        />
+        >
+          <option value="">Select Type</option>
+          <option value="0">MAISON</option>
+          <option value="1">GARE</option>
+          <option value="2">HOTEL</option>
+        </select>
         <input
           type="text"
           name="name"
@@ -103,17 +107,10 @@ const AdminPanel = () => {
           onChange={handleInputChange}
         />
         <input
-          type="text"
+          type="number"
           name="value"
-          placeholder="Value"
+          placeholder="12345"
           value={propertyDetails.value}
-          onChange={handleInputChange}
-        />
-        <input
-          type="text"
-          name="surface"
-          placeholder="Surface"
-          value={propertyDetails.surface}
           onChange={handleInputChange}
         />
         <input
@@ -123,24 +120,22 @@ const AdminPanel = () => {
           value={propertyDetails.documentHash}
           onChange={handleInputChange}
         />
-        <input
-          type="text"
-          name="imageHash"
-          placeholder="Image Hash"
-          value={propertyDetails.imageHash}
-          onChange={handleInputChange}
-        />
-        <button onClick={handleMint}>Mint Property</button>
+        <button onClick={handleMint}>Create Property</button>
       </div>
       <div className="admin-management">
         <h3>Manage Admins</h3>
         <div>
           <h4>Current Admins</h4>
-          <ul>
-            {admins.map((admin, index) => (
-              <li key={index}>{admin}</li>
-            ))}
-          </ul>
+          <table>
+            <tbody>
+              {admins.map((admin, index) => (
+                <tr key={index}>
+                  <td>{admin}</td>
+                  <td><button onClick={() => handleRemoveAdminDirect(admin)}>Remove</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <div>
           <h4>Add Admin</h4>
@@ -149,18 +144,9 @@ const AdminPanel = () => {
             placeholder="Admin Address"
             value={newAdmin}
             onChange={(e) => setNewAdmin(e.target.value)}
+            className="admin-input"
           />
           <button onClick={handleAddAdmin}>Add Admin</button>
-        </div>
-        <div>
-          <h4>Remove Admin</h4>
-          <input
-            type="text"
-            placeholder="Admin Address"
-            value={adminToRemove}
-            onChange={(e) => setAdminToRemove(e.target.value)}
-          />
-          <button onClick={handleRemoveAdmin}>Remove Admin</button>
         </div>
       </div>
     </div>

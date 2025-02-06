@@ -4,6 +4,12 @@ import { getTransactionHistory } from '../contract/contract';
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 10000);
+  };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -12,6 +18,7 @@ const Transactions = () => {
         setTransactions(transactionHistory);
       } catch (error) {
         console.error("Erreur lors de la récupération des transactions:", error);
+        showNotification("Erreur lors de la récupération des transactions");
       } finally {
         setLoading(false);
       }
@@ -25,26 +32,29 @@ const Transactions = () => {
   }
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>ID du Token</th>
-          <th>De</th>
-          <th>À</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        {transactions.map((transaction, index) => (
-          <tr key={index}>
-            <td>{transaction.tokenId}</td>
-            <td>{transaction.from}</td>
-            <td>{transaction.to}</td>
-            <td>{new Date(transaction.timestamp * 1000).toLocaleString()}</td>
+    <div className="transactions-container">
+      {notification && <div className="notification">{notification}</div>}
+      <table>
+        <thead>
+          <tr>
+            <th>ID du Token</th>
+            <th>De</th>
+            <th>À</th>
+            <th>Timestamp</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {transactions.map((transaction, index) => (
+            <tr key={index}>
+              <td>{transaction.tokenId}</td>
+              <td>{transaction.from}</td>
+              <td>{transaction.to}</td>
+              <td>{new Date(transaction.timestamp * 1000).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
