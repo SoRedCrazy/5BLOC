@@ -71,7 +71,7 @@ const PropertiesTable = () => {
 
   const handleFilterByValue = async () => {
     try {
-      const filteredProperties = await filterPropertiesByValue(minValue, maxValue);
+      const filteredProperties = await filterPropertiesByValue(minValue* 100000000000000, maxValue* 100000000000000);
       setProperties(filteredProperties);
     } catch (error) {
       console.error('Error filtering properties by value:', error);
@@ -100,9 +100,9 @@ const PropertiesTable = () => {
         </div>
         <div>
           <label>Valeur Min:</label>
-          <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="admin-input" />
+          <input type="number" placeholder="12345" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="admin-input" />
           <label>Valeur Max:</label>
-          <input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="admin-input" />
+          <input type="number" placeholder="12345" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="admin-input" />
           <button onClick={handleFilterByValue}>Filtrer</button>
         </div>
       </div>
